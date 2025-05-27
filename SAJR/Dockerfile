@@ -1,6 +1,6 @@
 FROM debian:bullseye-slim
 
-LABEL maintainer "bioinformatics@age.mpg.de"
+LABEL maintainer "shajia.se@gmail.com"
 
 RUN echo "deb http://deb.debian.org/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
 echo "deb-src http://deb.debian.org/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
