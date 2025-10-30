@@ -13,7 +13,7 @@ RUN R -e "if (!requireNamespace('BiocManager', quietly = TRUE)) install.packages
 BiocManager::install(c(\
   'DESeq2', 'edgeR', 'limma', 'tximport', 'biomaRt', \
   'org.Mm.eg.db', 'AnnotationDbi', 'clusterProfiler', 'enrichplot', \
-  'EnhancedVolcano', 'GSEABase', 'fgsea', 'WGCNA', \
+  'EnhancedVolcano', 'GSEABase', 'fgsea', 'WGCNA', 'GenomicFeatures', 'tximport', \
   'Gviz', 'AnnotationHub', 'TxDb.Mmusculus.UCSC.mm10.knownGene' \
 ))"
 
