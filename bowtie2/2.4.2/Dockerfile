@@ -1,15 +1,11 @@
-# base Dockerfile to enable Docker Hub autobuilds
 FROM debian:bullseye-slim
 
-LABEL maintainer "shajia.se@gmail.com"
+LABEL maintainer="shajia.se@gmail.com"
 
-RUN echo "deb http://deb.debian.org/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb-src http://deb.debian.org/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb http://deb.debian.org/debian/ bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb-src http://deb.debian.org/debian/ bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb-src http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get -yq dist-upgrade && \
-  apt install -y bowtie2 && \
-  apt-get clean && rm -rf /var/lib/apt/lists/* 
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      bowtie2 \
+      ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
