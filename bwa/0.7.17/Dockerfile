@@ -1,22 +1,34 @@
 FROM debian:bullseye-slim
 
-LABEL maintainer "shajia.se@gmail.com"
+LABEL maintainer="shajia.se@gmail.com"
 
-RUN echo "deb http://deb.debian.org/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb-src http://deb.debian.org/debian/ bullseye main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb http://deb.debian.org/debian/ bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb-src http://deb.debian.org/debian/ bullseye-updates main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
-echo "deb-src http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get -yq dist-upgrade && \
-  apt-get install -yq wget tar pigz curl bzip2 build-essential libncurses-dev zlib1g-dev libbz2-dev liblzma-dev && \
-  apt-get clean && rm -rf /var/lib/apt/lists/* 
+# System dependencies to build BWA
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      wget \
+      ca-certificates \
+      tar \
+      pigz \
+      curl \
+      bzip2 \
+      build-essential \
+      libncurses-dev \
+      zlib1g-dev \
+      libbz2-dev \
+      liblzma-dev \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://github.com/lh3/bwa/archive/v0.7.17.tar.gz && \
-  tar -zxvf v0.7.17.tar.gz && \
-  cd bwa-0.7.17 && \
-  sed -i '3s/$/ -fcommon/' Makefile && \
-  make
+# Build BWA 0.7.17
+WORKDIR /opt
+RUN wget -q https://github.com/lh3/bwa/archive/v0.7.17.tar.gz \
+ && tar -xzf v0.7.17.tar.gz \
+ && cd bwa-0.7.17 \
+ && sed -i '3s/$/ -fcommon/' Makefile \
+ && make \
+ && cp bwa /usr/local/bin/ \
+ && cd /opt \
+ && rm -rf bwa-0.7.17 v0.7.17.tar.gz
 
-ENV PATH /bwa-0.7.17:$PATH
+# /usr/local/bin is already in PATH, so no ENV needed
