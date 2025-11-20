@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  jupyterlab:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jupyterlab-dev
+    ports:
+      - "8888:8888"
+    volumes:
+      - ~/bioinfo:/home/sjiang/work
+    user: sjiang
+    restart: unless-stopped
+
