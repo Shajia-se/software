@@ -22,5 +22,10 @@ RUN mkdir -p "${PICARD_HOME}" && \
 # Work directory where users will mount data
 WORKDIR /data
 
-# Default entrypoint: run Picard; you can append the subcommand/args
+# Default entrypoint: run Picard by default
 ENTRYPOINT ["java", "-jar", "/opt/picard/picard.jar"]
+
+# Add `picard` wrapper so you can run "picard <ToolName>" directly
+RUN echo -e '#!/usr/bin/env bash\nexec java -jar /opt/picard/picard.jar "$@"' \
+    > /usr/local/bin/picard && \
+    chmod +x /usr/local/bin/picard
