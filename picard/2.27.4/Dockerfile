@@ -2,16 +2,17 @@ FROM openjdk:22-jdk-slim-bullseye
 
 LABEL maintainer="shajia.se@gmail.com"
 
-# Optional: make version easy to change at build time
 ARG PICARD_VERSION=2.27.4
 
 ENV PICARD_HOME=/opt/picard
 
-# Install only what we really need, no dist-upgrade, no extra repos
+# Install R + wget + ca-certificates
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        r-base \
         wget \
         ca-certificates && \
+    Rscript -e 'install.packages("ggplot2", repos="https://cloud.r-project.org")' && \
     rm -rf /var/lib/apt/lists/*
 
 # Download Picard
@@ -26,7 +27,6 @@ WORKDIR /data
 ENTRYPOINT ["java", "-jar", "/opt/picard/picard.jar"]
 
 # Add `picard` wrapper so you can run "picard <ToolName>" directly
-RUN printf '#!/usr/bin/env bash\nexec java -jar /opt/picard/picard.jar "$@"\n' \
+RUN printf '#!/usr/bin/env bash\nexec java -jar /opt/picard/picard.jar \"$@\"\n' \
     > /usr/local/bin/picard && \
     chmod +x /usr/local/bin/picard
-
