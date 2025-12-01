@@ -27,6 +27,6 @@ WORKDIR /data
 ENTRYPOINT ["java", "-jar", "/opt/picard/picard.jar"]
 
 # Add `picard` wrapper so you can run "picard <ToolName>" directly
-RUN printf '#!/usr/bin/env bash\nexec java -jar /opt/picard/picard.jar \"$@\"\n' \
+RUN printf '#!/usr/bin/env bash\nexec java -jar /opt/picard/picard.jar "$@"\n' \
     > /usr/local/bin/picard && \
     chmod +x /usr/local/bin/picard
