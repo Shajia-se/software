@@ -6,9 +6,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV HOMER_HOME=/opt/homer
 ENV PATH="${HOMER_HOME}/bin:${PATH}"
 
-# -------------------------
-# 1) Dependencies
-# -------------------------
 RUN apt-get update && apt-get install -y \
     wget \
     perl \
@@ -18,22 +15,15 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libgd-dev \
     libexpat1-dev \
-    git \
     unzip \
-  && rm -rf /var/lib/apt/lists/*
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-# -------------------------
-# 2) Install HOMER + genomes
-#    (configureHomer.pl lives in /opt, not /opt/homer)
-# -------------------------
 RUN mkdir -p /opt && \
     cd /opt && \
     wget http://homer.ucsd.edu/homer/configureHomer.pl && \
-    perl configureHomer.pl -install && \
-    perl configureHomer.pl -install human && \
-    perl configureHomer.pl -install mouse
+    perl configureHomer.pl -install
 
-# Optional sanity check
-RUN which findMotifsGenome.pl && findMotifsGenome.pl | head -n 5 || true
+RUN findMotifsGenome.pl 2>&1 | head -n 5 || true
 
 WORKDIR /data
