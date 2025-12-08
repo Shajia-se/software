@@ -10,20 +10,26 @@ RUN apt-get update && apt-get install -y \
     wget \
     perl \
     gcc \
+    g++ \
     make \
-    libxml2 \
-    libxml2-dev \
+    zip \
+    unzip \
+    tar \
+    gzip \
+    bzip2 \
+    zlib1g-dev \
     libgd-dev \
     libexpat1-dev \
-    unzip \
-    git \
+    libxml2 \
+    libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /opt && \
-    cd /opt && \
-    wget http://homer.ucsd.edu/homer/configureHomer.pl && \
-    perl configureHomer.pl -install
+WORKDIR /opt/homer
+RUN set -eux; \
+    wget http://homer.ucsd.edu/homer/configureHomer.pl; \
+    perl configureHomer.pl -install homer; \
+    ls -R .
 
-RUN findMotifsGenome.pl 2>&1 | head -n 5 || true
+RUN annotatePeaks.pl 2>&1 | head -n 5 || true
 
 WORKDIR /data
