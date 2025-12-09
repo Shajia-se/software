@@ -25,11 +25,19 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /opt/homer
 RUN set -eux; \
-    wget http://homer.ucsd.edu/homer/configureHomer.pl; \
+    wget -O configureHomer.pl http://homer.ucsd.edu/homer/configureHomer.pl; \
+    chmod +x configureHomer.pl; \
+    echo "=== Install HOMER core ==="; \
     perl configureHomer.pl -install homer; \
+    echo "=== List HOMER bin ==="; \
+    ls -l $HOMER_HOME/bin; \
+    echo "=== Install mm10 genome ==="; \
     perl configureHomer.pl -install mm10; \
-    ls -R .
+    echo "=== Available genomes ==="; \
+    perl configureHomer.pl -list
 
-RUN annotatePeaks.pl 2>&1 | head -n 5 || true
+RUN set -eux; \
+    which annotatePeaks.pl; \
+    annotatePeaks.pl 2>&1 | head -n 10 || true
 
 WORKDIR /data
