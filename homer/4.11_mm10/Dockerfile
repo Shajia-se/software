@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     gzip \
     bzip2 \
     unzip \
+    zip \
     zlib1g-dev \
     libgd-dev \
     libexpat1-dev \
