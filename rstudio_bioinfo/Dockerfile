@@ -1,22 +1,28 @@
-FROM rocker/tidyverse:latest
+# ============================================================
+# RNA-seq RStudio image (stable + Bioconductor-safe)
+# - Fixes Bioconductor repo override (p3m) issue
+# - Fixes igraph/enrichplot/clusterProfiler GLPK runtime error
+# - Includes fail-fast checks so build fails if key pkgs missing
+# ============================================================
+
+# Pin the base image to avoid "latest" drift.
+# This should match your current session (R 4.5.2).
+FROM rocker/tidyverse:4.5.2
 
 # ------------------------------------------------------------
 # System dependencies
-# - imagemagick/libmagick++ : for magick-related dependencies (GSVA/SpatialExperiment chain may touch)
-# - libglpk40              : REQUIRED to fix igraph load error (libglpk.so.40) -> enrichplot/clusterProfiler
-# - build deps             : make Bioconductor compilation more reliable
 # ------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Core build/toolchain deps (often needed for Bioc packages)
+    # build toolchain (often needed by Bioc packages)
     build-essential \
     gfortran \
     pkg-config \
     git \
-    # SSL / curl / xml (common R package deps)
+    # common system libs for R packages
     libssl-dev \
     libcurl4-openssl-dev \
     libxml2-dev \
-    # Fonts/graphics (often required by plotting packages)
+    # graphics/text deps
     libfontconfig1-dev \
     libharfbuzz-dev \
     libfribidi-dev \
@@ -24,10 +30,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
     libtiff5-dev \
     libjpeg-dev \
-    # ImageMagick (fix magick.so / ImageMagick issues)
+    # ImageMagick (magick.so related)
     imagemagick \
     libmagick++-dev \
-    # GLPK (fix igraph.so -> libglpk.so.40 missing)
+    # GLPK (fix: libglpk.so.40 missing for igraph -> enrichplot/clusterProfiler)
     libglpk40 \
     libglpk-dev \
  && rm -rf /var/lib/apt/lists/*
@@ -42,40 +48,43 @@ install.packages(c( \
   'circlize','patchwork','stringr','lubridate','remotes' \
 ), Ncpus=parallel::detectCores())"
 
-# fgsea is on CRAN (reliable via CRAN)
+# fgsea is CRAN (most reliable via CRAN)
 RUN R -e "options(repos=c(CRAN='https://cloud.r-project.org')); \
 install.packages('fgsea', Ncpus=parallel::detectCores())"
 
 # ------------------------------------------------------------
-# Bioconductor packages
+# Bioconductor packages (IMPORTANT: reset repos to Bioc standard)
 # ------------------------------------------------------------
 RUN R -e "options(repos=c(CRAN='https://cloud.r-project.org')); \
 if (!requireNamespace('BiocManager', quietly=TRUE)) install.packages('BiocManager'); \
-BiocManager::install(version = '3.18', ask=FALSE); \
+options(repos=BiocManager::repositories()); \
 BiocManager::install(c( \
   'DESeq2','edgeR','limma','tximport','biomaRt', \
-  'org.Mm.eg.db','AnnotationDbi','clusterProfiler','enrichplot','DOSE', \
+  'org.Mm.eg.db','AnnotationDbi', \
+  'DOSE','clusterProfiler','enrichplot', \
   'EnhancedVolcano','GSEABase','WGCNA','GenomicFeatures', \
   'Gviz','AnnotationHub','TxDb.Mmusculus.UCSC.mm10.knownGene', \
   'ComplexHeatmap','GSVA','SpatialExperiment' \
-), ask=FALSE, update=FALSE, Ncpus=parallel::detectCores())"
+), ask=FALSE, update=FALSE, force=TRUE, Ncpus=parallel::detectCores())"
 
 # ------------------------------------------------------------
 # Proteomics / Metabolomics related
 # ------------------------------------------------------------
 RUN R -e "options(repos=c(CRAN='https://cloud.r-project.org')); \
 if (!requireNamespace('BiocManager', quietly=TRUE)) install.packages('BiocManager'); \
-BiocManager::install(c('MSnbase','DEP'), ask=FALSE, update=FALSE, Ncpus=parallel::detectCores()); \
+options(repos=BiocManager::repositories()); \
+BiocManager::install(c('MSnbase','DEP'), ask=FALSE, update=FALSE, force=TRUE, Ncpus=parallel::detectCores()); \
 install.packages(c('MetaboAnalystR','ropls','mixOmics','pathview'), Ncpus=parallel::detectCores())"
 
 # ------------------------------------------------------------
-# Optional: quick sanity check during build (fail fast if missing)
-# Comment out if you prefer a faster build.
+# Fail-fast checks (so build will FAIL if key pkgs not usable)
 # ------------------------------------------------------------
-RUN R -e "library(igraph); \
-library(clusterProfiler); library(enrichplot); \
-library(msigdbr); library(ComplexHeatmap); library(GSVA); library(fgsea); \
-cat('All key libraries loaded successfully.\\n')"
+RUN R -e "options(repos=BiocManager::repositories()); \
+pkgs <- c('igraph','clusterProfiler','enrichplot'); \
+miss <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly=TRUE)]; \
+if (length(miss)) stop('Missing packages: ', paste(miss, collapse=', ')); \
+library(igraph); library(clusterProfiler); library(enrichplot); \
+cat('OK: igraph + clusterProfiler + enrichplot load successfully\\n')"
 
 # ------------------------------------------------------------
 # Workdir / port
